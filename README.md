@@ -3,4 +3,6 @@ Gravity Forms Tooltips
 
 Convert Gravity Forms description fields into tooltips
 
-Example: http://sandbox.norcross.co/gf-tooltips/
+##### Demo
+* [Label hover example](http://sandbox.norcross.co/gf-tooltips/form-example/)
+* [Icon hover example](http://sandbox.norcross.co/gf-tooltips/form-icon-example/)
