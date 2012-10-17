@@ -10,3 +10,6 @@ Convert Gravity Forms description fields into tooltips
 ##### Options:
 * icon or label hover
 * auto or manual placement
+
+##### To Do:
+* options for placement (can get wonky based on label position)
