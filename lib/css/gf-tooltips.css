@@ -1,14 +1,20 @@
+li.gf-tooltip-label label.gf-tooltip-load:hover {
+	cursor:help;
+}
+
 span.gf-tooltip-load {
-	text-indent:-9999px;
-	background:url(../img/tooltip-icon.png) no-repeat 0 0;
-	height:16px;
-	width:16px;
-	display:inline-block;
-	text-decoration:none;
-	margin:0 0 0 3px;
-	cursor:pointer;
+	height: 16px;
+	width: 16px;
+	text-decoration: none;
+	margin: 0 0 0 5px;
+	cursor: help;
+	zoom: 1;
+	filter: alpha(opacity=65);
+	opacity: 0.65;
 }
-		
+
 span.gf-tooltip-load:hover {
-	background-position:0 -16px;
+	filter: alpha(opacity=100);
+	opacity: 1;
 }
+

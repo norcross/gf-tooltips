@@ -40,10 +40,12 @@ class GF_Tooltips
      * @return GF_Tooltips
      */
     public function __construct() {
+        add_action                  ( 'wp_head',                    array( $this, 'tooltip_root'        ),  99      );
         add_action                  ( 'admin_init',                 array( $this, 'reg_settings'        )           );
         add_action                  ( 'admin_notices',              array( $this, 'gf_active_check'     ),  10      );
         add_action                  ( 'admin_enqueue_scripts',      array( $this, 'admin_scripts'       ),  10      );
         add_action                  ( 'wp_enqueue_scripts',         array( $this, 'scripts_styles'      ),  10      );
+        add_filter                  ( 'gform_pre_render',           array( $this, 'form_wrap_class'     )           );
         add_action                  ( 'gform_field_css_class',      array( $this, 'field_auto_class'    ),  10, 3   );
         add_action                  ( 'gform_field_css_class',      array( $this, 'field_manu_class'    ),  10, 3   );
         add_action                  ( 'gform_field_css_class',      array( $this, 'field_hide_class'    ),  10, 3   );
@@ -67,7 +69,7 @@ class GF_Tooltips
             return;
 
         echo '<div id="message" class="error fade below-h2"><p><strong>This plugin requires Gravity Forms to function.</strong></p></div>';
-        
+
     }
 
     /**
@@ -79,22 +81,39 @@ class GF_Tooltips
     public function quick_link( $links, $file ) {
 
         static $this_plugin;
-        
+
         if (!$this_plugin) {
             $this_plugin = GFT_BASE;
         }
- 
+
         // check to make sure we are on the correct plugin
         if ($file == $this_plugin) {
-            
+
             $settings_link  = '<a href="'.menu_page_url( 'gf-tooltips', 0 ).'">Settings</a>';
-        
+
             array_unshift($links, $settings_link);
         }
- 
+
         return $links;
 
-    }   
+    }
+
+    /**
+     * Add attribute to form tag for positioning
+     *
+     * @return GF_Tooltips
+     */
+
+    public function form_wrap_class($form) {
+
+        // grab option field
+        $tooltip    = get_option('gf_tooltips');
+
+        $location   = (isset($tooltip['layout']) ? $tooltip['layout'] : 'topRight' );
+
+        $form['cssClass'] .= $location;
+        return $form;
+    }
 
     /**
      * Add class for auto generated tooltip based on options
@@ -104,12 +123,12 @@ class GF_Tooltips
 
 
     public function field_auto_class($classes, $field, $form){
-    
+
         // grab option field
         $tooltip = get_option('gf_tooltips');
-        
+
         // bail if options haven't been set
-        if (!isset($tooltip['display']) || !isset($tooltip['option']) )
+        if (!isset($tooltip['display']) || !isset($tooltip['position']) )
             return $classes;
 
         // bail if option was set to manual
@@ -117,11 +136,11 @@ class GF_Tooltips
             return $classes;
 
         // add class for label tooltip
-        if (isset($tooltip['option']) && $tooltip['option'] == 'label' )
+        if (isset($tooltip['position']) && $tooltip['position'] == 'label' )
             $classes .= ' gf-tooltip gf-tooltip-label';
 
         // add class for icon tooltip
-        if (isset($tooltip['option']) && $tooltip['option'] == 'icon' )
+        if (isset($tooltip['position']) && $tooltip['position'] == 'icon' )
             $classes .= ' gf-tooltip gf-tooltip-icon';
 
         return $classes;
@@ -135,12 +154,12 @@ class GF_Tooltips
 
 
     public function field_manu_class($classes, $field, $form){
-    
+
         // grab option field
         $tooltip = get_option('gf_tooltips');
-        
+
         // bail if options haven't been set
-        if (!isset($tooltip['desc']) || !isset($tooltip['option']) )
+        if (!isset($tooltip['desc']) || !isset($tooltip['position']) )
             return $classes;
 
         // bail if option was set to auto
@@ -148,11 +167,11 @@ class GF_Tooltips
             return $classes;
 
         // add class for label tooltip
-        if (isset($tooltip['option']) && $tooltip['option'] == 'label' )
+        if (isset($tooltip['position']) && $tooltip['position'] == 'label' )
             $classes .= ' gf-tooltip gf-tooltip-label-manual';
 
         // add class for icon tooltip
-        if (isset($tooltip['option']) && $tooltip['option'] == 'icon' )
+        if (isset($tooltip['position']) && $tooltip['position'] == 'icon' )
             $classes .= ' gf-tooltip gf-tooltip-icon-manual';
 
         return $classes;
@@ -166,12 +185,12 @@ class GF_Tooltips
 
 
     public function field_hide_class($classes, $field, $form){
-    
+
         // grab option field
         $tooltip = get_option('gf_tooltips');
-        
+
         // bail if options haven't been set
-        if (!isset($tooltip['desc']) || !isset($tooltip['desc']) || !isset($tooltip['option']) )
+        if (!isset($tooltip['desc']) || !isset($tooltip['desc']) || !isset($tooltip['position']) )
             return $classes;
 
         // add auto hide if option was set to manual
@@ -186,14 +205,28 @@ class GF_Tooltips
     }
 
     /**
+     * add plugin folder
+     *
+     * @return GF_Tooltips
+     */
+
+    public function tooltip_root() {
+
+        $base = plugin_dir_url( __FILE__ );
+        echo '<meta name="tooltip-base" content="'.$base.'">';
+
+    }
+
+
+
+    /**
      * Register settings
      *
      * @return GF_Tooltips
      */
 
-
     public function reg_settings() {
-        register_setting( 'gf_tooltips', 'gf_tooltips');      
+        register_setting( 'gf_tooltips', 'gf_tooltips');
 
     }
 
@@ -203,7 +236,7 @@ class GF_Tooltips
      * @return GF_Tooltips
      */
 
-    
+
     public function create_menu($menus){
 
         $menus[] = array(
@@ -220,17 +253,21 @@ class GF_Tooltips
      *
      * @return GF_Tooltips
      */
-     
+
     public function gf_tooltip_page() {
         if (!current_user_can('manage_options') )
             return;
         ?>
-    
+
         <div class="wrap">
             <img alt="" src="<?php echo plugins_url( '/lib/img/gravity-edit-icon-32', __FILE__ ); ?>" style="float:left; margin:7px 7px 0 0;"/>
             <h2><?php _e('Gravity Forms Tooptips') ?></h2>
 
- 
+        <?php
+        if ( isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true' )
+            echo '<div id="message" class="updated below-h2"><p><strong>Settings have been saved.</strong></p></div>';
+        ?>
+
 
             <div id="poststuff" class="metabox-holder has-right-sidebar">
 
@@ -238,30 +275,48 @@ class GF_Tooltips
             echo $this->settings_side();
             echo $this->settings_open();
             ?>
-            
+
                 <form method="post" action="options.php">
                 <?php
                 settings_fields( 'gf_tooltips' );
                 $tooltip = get_option('gf_tooltips');
                 // option index checks
-                $gf_option  = isset($tooltip['option'])     ? $tooltip['option']    : 'label';
-                $gf_display = isset($tooltip['display'])    ? $tooltip['display']   : 'auto';
-                $gf_descs   = isset($tooltip['desc'])       ? $tooltip['desc']      : 'false';
+                $gf_position    = isset($tooltip['position'])   ? $tooltip['position']  : 'icon';
+//              $gf_layout      = isset($tooltip['layout'])     ? $tooltip['layout']    : 'topRight';
+                $gf_display     = isset($tooltip['display'])    ? $tooltip['display']   : 'auto';
+                $gf_descs       = isset($tooltip['desc'])       ? $tooltip['desc']      : 'false';
                 ?>
                 <table class="form-table gf-tooltip-table">
                 <tbody>
 
                     <tr>
-                        <th scope="row"><?php _e('Tooltip Layout') ?></th>
+                        <th scope="row"><?php _e('Tooltip Position') ?></th>
                         <td>
-                        <input id="gf-option-label" class="gf-tooltip-option" type="radio" name="gf_tooltips[option]" value="label" <?php checked( $gf_option, 'label', true ); ?> />
-                        <label for="gf-option-label"><?php _e('Display on field label hover') ?></label>
+                        <input id="gf-option-label" class="gf-tooltip-position" type="radio" name="gf_tooltips[position]" value="label" <?php checked( $gf_position, 'label', true ); ?> />
+                        <label for="gf-option-label"><?php _e('Apply tooltip to existing label') ?></label>
                         <br />
-                        <input id="gf-option-icon" class="gf-tooltip-option" type="radio" name="gf_tooltips[option]" value="icon" <?php checked( $gf_option, 'icon', true ); ?> />
+                        <input id="gf-option-icon" class="gf-tooltip-position" type="radio" name="gf_tooltips[position]" value="icon" <?php checked( $gf_position, 'icon', true ); ?> />
                         <label for="gf-option-icon"><?php _e('Insert tooltip icon next to label') ?></label>
                         </td>
                     </tr>
+<!-- this will be included at a later date
+                    <tr>
+                        <th scope="row"><?php _e('Tooltip Location') ?></th>
+                        <td>
+                        <select name="gf_tooltips[layout]" id="gf-option-layout">
 
+                            <option value="topRight" <?php selected( $gf_layout, 'topRight' ); ?>><?php _e('Top Right') ?></option>
+                            <option value="bottomRight" <?php selected( $gf_layout, 'bottomRight' ); ?>><?php _e('Bottom Right') ?></option>
+                            <option value="topLeft" <?php selected( $gf_layout, 'topLeft' ); ?>><?php _e('Top Left') ?></option>
+                            <option value="bottomLeft" <?php selected( $gf_layout, 'bottomLeft' ); ?>><?php _e('Bottom Left') ?></option>
+                            <option value="topMiddle" <?php selected( $gf_layout, 'topMiddle' ); ?>><?php _e('Top Middle') ?></option>
+                            <option value="bottomMiddle" <?php selected( $gf_layout, 'bottomMiddle' ); ?>><?php _e('Bottom Middle') ?></option>
+                        </select>
+
+                        <label for="gf-option-layout" class="description"><?php _e('Select where the tooltip should be anchored relative to the label'); ?></label>
+                        </td>
+                    </tr>
+-->
                     <tr>
                         <th scope="row"><?php _e('Tooltip Display') ?></th>
                         <td>
@@ -270,8 +325,8 @@ class GF_Tooltips
                         <br />
                         <input id="gf-display-manual" class="gf-tooltip-display" type="radio" name="gf_tooltips[display]" value="manual" <?php checked( $gf_display, 'manual', true ); ?> />
                         <label for="gf-display-manual"><?php _e('Insert tooltips manually') ?></label>
-                        <p class="description gf-manual-desc" style="display:none;"><?php _e('<strong>Note:</strong> Requires adding the <code>gf-tooltip-manual</code> class to each field') ?></p>
-                        
+                        <p class="description gf-manual-desc" style="display:none;"><?php _e('<strong>Note:</strong> Requires adding the <code>gf-tooltip-manual</code> class to each appropriate field') ?></p>
+
                         </td>
                     </tr>
 
@@ -284,17 +339,17 @@ class GF_Tooltips
                     </tr>
 
                 </tbody>
-                </table> 
+                </table>
 
                 <p><input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" /></p>
                 </form>
 
             </div>
-            
+
             <?php echo $this->settings_close(); ?>
 
         </div>
-    </div>   
+    </div>
 
     <?php }
 
@@ -332,7 +387,7 @@ class GF_Tooltips
     /**
      * Some extra stuff for the settings page
      *
-     * this is just to keep the area cleaner 
+     * this is just to keep the area cleaner
      *
      * @return GF_Tooltips
      */
@@ -357,7 +412,7 @@ class GF_Tooltips
                     </div>
                 </div>
             </div>
-            
+
             <div class="meta-box-sortables">
                 <div id="admin-more" class="postbox">
                     <h3 class="hndle" id="about-sidebar"><?php _e('Links') ?></h3>
@@ -393,7 +448,7 @@ class GF_Tooltips
             </div>
         </div>
 
-    <?php }     
+    <?php }
 
 /// end class
 }
