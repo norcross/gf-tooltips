@@ -40,7 +40,6 @@ class GF_Tooltips
      * @return GF_Tooltips
      */
     public function __construct() {
-        add_action                  ( 'wp_head',                    array( $this, 'tooltip_root'        ),  99      );
         add_action                  ( 'admin_init',                 array( $this, 'reg_settings'        )           );
         add_action                  ( 'admin_notices',              array( $this, 'gf_active_check'     ),  10      );
         add_action                  ( 'admin_enqueue_scripts',      array( $this, 'admin_scripts'       ),  10      );
@@ -205,21 +204,6 @@ class GF_Tooltips
     }
 
     /**
-     * add plugin folder
-     *
-     * @return GF_Tooltips
-     */
-
-    public function tooltip_root() {
-
-        $base = plugin_dir_url( __FILE__ );
-        echo '<meta name="tooltip-base" content="'.$base.'">';
-
-    }
-
-
-
-    /**
      * Register settings
      *
      * @return GF_Tooltips
@@ -365,7 +349,10 @@ class GF_Tooltips
 
         wp_enqueue_script( 'tooltips', plugins_url('/lib/js/jquery.qtip.min.js', __FILE__), array('jquery'), '1.0', true );
         wp_enqueue_script( 'gf-tooltips', plugins_url('/lib/js/gf-tooltips.js', __FILE__), array('jquery'), GFT_VER, true );
-
+        wp_localize_script('gf-tooltips', 'tooltip_vars', array(
+            'icon' => '<img src="'.plugins_url('/lib/img/tooltip-icon.png', __FILE__).'">'
+            )
+        );
     }
 
     /**
