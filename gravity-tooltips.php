@@ -245,7 +245,7 @@ class GF_Tooltips
 
         <div class="wrap">
             <img alt="" src="<?php echo plugins_url( '/lib/img/gravity-edit-icon-32', __FILE__ ); ?>" style="float:left; margin:7px 7px 0 0;"/>
-            <h2><?php _e('Gravity Forms Tooptips') ?></h2>
+            <h2><?php _e('Gravity Forms Tooltips') ?></h2>
 
         <?php
         if ( isset($_GET['settings-updated']) && $_GET['settings-updated'] == 'true' )
